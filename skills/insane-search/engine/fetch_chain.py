@@ -254,11 +254,16 @@ def _build_plan(
     device_class: str,
     probe_impersonate: str,
     probe_referer: str,
+    priority: Optional[dict] = None,
 ) -> list[_Cand]:
     """Materialize a diversity-ordered candidate plan across the top profiles.
 
     Profiles are round-robin interleaved so a confident #1 profile cannot
-    starve #2/#3. The probe combo is removed (already executed)."""
+    starve #2/#3. The probe combo is removed (already executed).
+
+    `priority` (U5 self-learning): a previously-successful route
+    ``{"transform","impersonate","referer"}`` for this host — the matching
+    candidate is moved to the FRONT so a known-good route is retried first."""
     per: list[list[_Cand]] = []
     for hit in hits[:3]:
         pid = getattr(hit, "profile_id", None) or "unknown_challenge"
@@ -279,11 +284,100 @@ def _build_plan(
                 seen.add(key)
                 merged.append(c)
         i += 1
+
+    if priority:
+        front = [c for c in merged if c.transform == priority.get("transform")
+                 and c.impersonate == priority.get("impersonate")
+                 and c.referer == priority.get("referer")]
+        if front:
+            rest = [c for c in merged if c not in front]
+            merged = front + rest
     return merged
 
 
-# --- Main entrypoint ---------------------------------------------------------
+# --- Public entrypoint: self-learning wrapper (U5) ---------------------------
+def _winning_route(result: FetchResult) -> Optional[dict]:
+    """Extract the curl route that produced the OK result, from the trace.
+
+    Only probe/grid curl wins are learnable: Phase 0 always runs first anyway,
+    and a browser win carries no reusable curl identity."""
+    for att in reversed(result.trace):
+        if (att.verdict in _OK_VALUES and att.phase in ("probe", "grid")
+                and att.executor == "curl_cffi" and att.impersonate):
+            return {
+                "transform": att.url_transform,
+                "impersonate": att.impersonate,
+                "referer": att.referer,
+                "phase": att.phase,
+            }
+    return None
+
+
 def fetch(
+    url: str,
+    *,
+    success_selectors: Optional[list[str]] = None,
+    device_class: str = "auto",
+    user_hint: Optional[dict] = None,
+    timeout: int = 25,
+    max_attempts: Optional[int] = None,
+    max_browser_attempts: int = 2,
+    enable_playwright: bool = True,
+    enable_phase0: bool = True,
+    enable_learning: bool = True,
+) -> FetchResult:
+    """Public entrypoint — the generic grid wrapped with per-host self-learning.
+
+    1. Before fetching, look up the route that last succeeded for this host and
+       promote it: it becomes the probe identity AND the front of the grid.
+    2. After fetching, record the winning route; or, if a learned route was
+       promoted and the run hit a REAL block, strike it (evicted after two
+       consecutive strikes — see `learning.py`).
+
+    The store is a bounded, self-pruning JSON file; any error in it is swallowed
+    so learning can never break a fetch. Disable per-call with
+    ``enable_learning=False`` or globally with ``INSANE_LEARN=0``."""
+    priority: Optional[dict] = None
+    learned_existed = False
+    uh = dict(user_hint or {})
+    try:
+        from . import learning
+        if enable_learning and learning.enabled():
+            priority = learning.lookup(url, device_class)
+            if priority:
+                learned_existed = True
+                uh.setdefault("impersonate_first", priority.get("impersonate"))
+                uh.setdefault("referer_strategy", priority.get("referer"))
+    except Exception:
+        priority = None
+
+    result = _fetch_core(
+        url, success_selectors=success_selectors, device_class=device_class,
+        user_hint=uh, timeout=timeout, max_attempts=max_attempts,
+        max_browser_attempts=max_browser_attempts,
+        enable_playwright=enable_playwright, enable_phase0=enable_phase0,
+        priority=priority,
+    )
+
+    try:
+        from . import learning
+        if enable_learning and learning.enabled():
+            if result.ok:
+                win = _winning_route(result)
+                if win:
+                    learning.record_success(url, device_class, win)
+            elif learned_existed:
+                learning.record_failure(
+                    url, device_class,
+                    penalize=learning.is_real_failure(result.stop_reason))
+    except Exception:
+        pass
+
+    return result
+
+
+# --- Main entrypoint ---------------------------------------------------------
+def _fetch_core(
     url: str,
     *,
     success_selectors: Optional[list[str]] = None,
@@ -294,6 +388,7 @@ def fetch(
     max_browser_attempts: int = 2,
     enable_playwright: bool = True,
     enable_phase0: bool = True,
+    priority: Optional[dict] = None,      # U5: learned route to retry first
 ) -> FetchResult:
     """Fetch `url` using the generic diversity grid.
 
@@ -409,7 +504,8 @@ def fetch(
                                "signals": ["no_probe_response"]})()]
     profile_used = hits[0].profile_id if hits else None
 
-    plan = _build_plan(url, hits, profiles, device_class, base_impersonate, base_referer)
+    plan = _build_plan(url, hits, profiles, device_class, base_impersonate,
+                       base_referer, priority=priority)
     planned = len(plan)
     grid_exhausted = False
     stop_reason = ""

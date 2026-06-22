@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0 — 2026-06-22
+
+Per-host self-learning (U5) — the engine now remembers which route got through and tries it first next time. Lab-built (`insane-search-lab`), effect-tested before shipping.
+
+- **`engine/learning.py` (new)** — a bounded, self-pruning JSON store (`~/.insane_search/learned.json`, override with `INSANE_LEARNED_PATH`). For each host it records the route that last succeeded (`transform × impersonate × referer × phase`), keyed by `host::{desktop|mobile}`.
+- **Promotion in the first phase** — `fetch()` is now a learning wrapper around the grid (`_fetch_core`): before fetching it looks up the host and promotes the learned route to *both* the probe identity and the front of the grid (`_build_plan` priority). On a 2nd visit the known-good route is retried first instead of being rediscovered.
+- **Eviction so the store can't bloat or rot**: (1) a learned route that hits a REAL block (`exhausted`/`challenge`/`blocked`) is struck and deleted after 2 consecutive strikes — transient outcomes (429, network/unknown error, budget cut) and URL-level outcomes (404/401) never strike; (2) entries unused for 30 days are pruned on load (`INSANE_LEARN_TTL_DAYS`); (3) a 500-entry LRU cap (`INSANE_LEARN_MAX`). Disable entirely with `INSANE_LEARN=0`.
+- **Safe by construction** — every learning operation is best-effort and swallows its own errors, so it can never break a fetch. It is a DATA file only, so the No-Site-Name Rule (R3) still holds (`bias_check` clean).
+- **Measured** (`experiments/effect_e8.py`, offline A/B): 2nd-visit curl attempts drop (3 → 1 on a small grid; scales with grid depth), and a learning-off control matches the cold run — confirming the win comes from learning. Adds `tests/test_u5.py` (14 cases); full engine regression 45/45.
+
 ## 0.7.3 — 2026-06-22
 
 - **5-language README** (matches the marketplace root): added `README.zh.md`, `README.ja.md`, `README.es.md` (full translations) and a 5-language switcher header across all files (en · ko · zh · ja · es). The "Impossible is nothing." slogan stays in English in zh/ja/es with a localized second line.
