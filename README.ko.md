@@ -4,6 +4,8 @@
 
 # AIOFFICE-SearchPro
 
+<sub><a href="https://github.com/fivetaku/insane-search">fivetaku/insane-search</a>에서 포크해 AIOFFICE 배포판으로 관리합니다.</sub>
+
 **포기는 배추 셀 때나 쓰는 말. 공개된 페이지라면, AIOFFICE-SearchPro는 결국 뚫어낸다.**
 
 차단에 강한 공개 페이지 리더 — Claude Code용. API 키도, 프록시 설정도 없다.

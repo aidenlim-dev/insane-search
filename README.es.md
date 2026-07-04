@@ -4,6 +4,8 @@
 
 # AIOFFICE-SearchPro
 
+<sub>Forked from <a href="https://github.com/fivetaku/insane-search">fivetaku/insane-search</a> and maintained as an AIOFFICE distribution.</sub>
+
 **Impossible is nothing. Si es público, AIOFFICE-SearchPro acaba entrando.**
 
 Un lector de páginas públicas resistente al bloqueo, para Claude Code. Sin claves de API, sin configurar proxies.

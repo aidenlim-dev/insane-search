@@ -4,6 +4,8 @@
 
 # AIOFFICE-SearchPro
 
+<sub>Forked from <a href="https://github.com/fivetaku/insane-search">fivetaku/insane-search</a> and maintained as an AIOFFICE distribution.</sub>
+
 **Impossible is nothing. 只要是公开页面，AIOFFICE-SearchPro 终会突破。**
 
 为 Claude Code 打造的抗封锁公开页面阅读器。无需 API 密钥，无需代理配置。

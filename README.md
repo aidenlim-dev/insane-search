@@ -4,6 +4,8 @@ English | [한국어](README.ko.md) | [中文](README.zh.md) | [日本語](READM
 
 # AIOFFICE-SearchPro
 
+<sub>Forked from <a href="https://github.com/fivetaku/insane-search">fivetaku/insane-search</a> and maintained as an AIOFFICE distribution.</sub>
+
 **Impossible is nothing. If it's public, AIOFFICE-SearchPro gets in.**
 
 A resilient public-page reader for Claude Code. No API keys, no proxy setup.

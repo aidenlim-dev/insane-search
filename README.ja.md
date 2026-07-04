@@ -4,6 +4,8 @@
 
 # AIOFFICE-SearchPro
 
+<sub>Forked from <a href="https://github.com/fivetaku/insane-search">fivetaku/insane-search</a> and maintained as an AIOFFICE distribution.</sub>
+
 **Impossible is nothing. 公開ページなら、AIOFFICE-SearchPro はいずれ突破する。**
 
 Claude Code 向けの、ブロックに強い公開ページリーダー。API キーもプロキシ設定も不要。
