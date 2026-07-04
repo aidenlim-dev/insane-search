@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Course/student readiness check for insane-search.
+set -u
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+RUN_ENGINE="$ROOT/setup/run-engine.sh"
+fail=0
+
+ok() { printf 'ok  %s\n' "$1"; }
+warn() { printf 'warn %s\n' "$1"; }
+bad() { printf 'bad %s\n' "$1"; fail=1; }
+
+if command -v claude >/dev/null 2>&1; then
+  ok "Claude Code found: $(claude --version 2>/dev/null | head -n 1)"
+  if claude plugin validate "$ROOT" >/dev/null 2>&1; then
+    ok "Claude plugin validator passes"
+  else
+    bad "Claude plugin validation failed: run 'claude plugin validate $ROOT'"
+  fi
+else
+  bad "Claude Code CLI not found. Install Claude Code first."
+fi
+
+if [ -f "$ROOT/.claude-plugin/marketplace.json" ]; then
+  if command -v claude >/dev/null 2>&1 && claude plugin validate "$ROOT" >/dev/null 2>&1; then
+    ok "marketplace/plugin files are present"
+  else
+    warn "marketplace file is present, but validation could not be confirmed"
+  fi
+else
+  bad ".claude-plugin/marketplace.json is missing"
+fi
+
+if "$RUN_ENGINE" "https://example.com/" --selector h1 --no-playwright --max-attempts 1 --json >/tmp/insane-search-doctor.json 2>/tmp/insane-search-doctor.err; then
+  ok "engine smoke test passed"
+else
+  bad "engine smoke test failed"
+  sed -n '1,20p' /tmp/insane-search-doctor.err >&2
+fi
+
+if command -v node >/dev/null 2>&1; then
+  ok "Node.js found: $(node --version)"
+else
+  warn "Node.js not found; local real-Chrome Playwright fallback will be unavailable"
+fi
+
+if [ -d "$ROOT/skills/insane-search/engine/templates/node_modules" ]; then
+  ok "local Playwright template dependencies installed"
+else
+  warn "optional local Playwright deps missing: cd skills/insane-search/engine/templates && npm install && npx patchright install chrome"
+fi
+
+if command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null | grep -qi playwright; then
+  ok "Playwright MCP appears configured"
+else
+  warn "optional Playwright MCP not configured: claude mcp add playwright -- npx -y @playwright/mcp@latest"
+fi
+
+exit "$fail"

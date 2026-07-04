@@ -10,9 +10,9 @@
  * NO-SITE-NAME RULE: this file must never branch on specific hostnames.
  * All site specifics come from the JSON input (url, waitSelector).
  *
- * Dependencies (install once on target machine):
- *   npm i -g playwright playwright-extra puppeteer-extra-plugin-stealth
- *   npx playwright install chrome    # system Chrome binary
+ * Dependencies (install once in this directory):
+ *   npm install
+ *   npx patchright install chrome    # system Chrome channel
  */
 
 const fs = require('fs');

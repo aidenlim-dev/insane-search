@@ -25,13 +25,38 @@
 
 ## ⚡ 설치
 
+강의용 / 이 GitHub 저장소 직접 설치:
+
+```bash
+/plugin marketplace add aidenlim-dev/insane-search
+/plugin install insane-search@insane-search-marketplace
+/reload-plugins
+```
+
+터미널에서 설치 상태 확인:
+
+```bash
+git clone https://github.com/aidenlim-dev/insane-search.git
+cd insane-search
+bash setup/doctor.sh
+```
+
+브라우저 폴백까지 완전히 쓰고 싶을 때:
+
+```bash
+claude mcp add playwright -- npx -y @playwright/mcp@latest
+cd skills/insane-search/engine/templates && npm install && npx patchright install chrome
+```
+
+기존 `gptaku-plugins` 마켓플레이스 설치:
+
 ```bash
 /plugin marketplace add https://github.com/fivetaku/gptaku_plugins.git
 /plugin install insane-search@gptaku-plugins
 /reload-plugins
 ```
 
-외울 명령어는 없다. 평소처럼 Claude Code에게 말하면, fetch가 막히는 순간 insane-search가 알아서 끼어든다.
+설치 뒤에는 외울 명령어가 없다. 평소처럼 Claude Code에게 말하면, fetch가 막히는 순간 insane-search가 알아서 끼어든다.
 
 ## 💬 이렇게 써보세요
 
@@ -52,7 +77,7 @@
 - **단정하지 않고 단계를 올린다** — 공개 API 리더 → 신디케이션 게이트웨이 → TLS 임퍼소네이션 → 진짜 헤드리스 브라우저까지, 하나가 뚫릴 때까지 차례로 시도한다.
 - **사람처럼 보인다** — User-Agent만 바꾸는 게 아니라 완전한 브라우저 정체성(실제 TLS 지문, 쿠키 워밍, 리퍼러 체인)을 구성한다.
 - **숨은 API를 찾는다** — 진짜 브라우저의 네트워크 트래픽을 보고 사이트가 내부적으로 쓰는 JSON을 그대로 재활용한다.
-- **셋업 제로** — 필요한 도구(`curl_cffi`, `yt-dlp` 등)를 첫 실행 때 자동 설치한다. API 키도, 가입도 없다.
+- **시스템 Python 셋업 제로** — 첫 실행 때 플러그인 전용 venv를 만들고 `curl_cffi`, `yt-dlp`, 파서 의존성을 설치한다. API 키도, 가입도 없다.
 
 ## 🆚 기본 Claude Code vs `+ insane-search`
 

@@ -526,7 +526,7 @@ def _fetch_core(
         elif probe_attempt.verdict in _TERMINAL_NONSUCCESS_VALUES:
             return _give_up(trace, profile_used, last_resp, last_attempt, best_suspect,
                             planned=0, executed=curl_attempts, grid_exhausted=False,
-                            stop_reason=probe_attempt.verdict)
+                            stop_reason=probe_attempt.verdict, profiles=profiles)
 
     # -------- Phase 2: detect + plan + execute ------------------------------
     if last_resp is not None:
@@ -584,7 +584,8 @@ def _fetch_core(
             for fb_name in fb_order:
                 if fb_name == "curl_grid_exhaust":
                     continue
-                if browser_used >= max_browser_attempts:
+                is_mcp_route = fb_name.startswith("playwright_mcp")
+                if not is_mcp_route and browser_used >= max_browser_attempts:
                     break
                 pw_attempt, pw_content = run_playwright_fallback(
                     url, profile_id=profile_used or "unknown_challenge",
@@ -592,7 +593,12 @@ def _fetch_core(
                     force_executor=fb_name, timeout=timeout if timeout and timeout > 30 else 90,
                 )
                 trace.append(pw_attempt)
-                browser_used += 1
+                # MCP is a handoff marker, not a browser subprocess the engine
+                # has executed. Do not let it consume the local Chrome attempt
+                # budget; otherwise max_browser_attempts=1 can skip the actual
+                # real-Chrome fallback.
+                if not is_mcp_route:
+                    browser_used += 1
                 if pw_attempt.verdict in _OK_VALUES:
                     return FetchResult(
                         ok=True, content=pw_content, final_url=pw_attempt.url,
@@ -617,10 +623,51 @@ def _fetch_core(
     # -------- Give up, return best we have ----------------------------------
     return _give_up(trace, profile_used, last_resp, last_attempt, best_suspect,
                     planned=planned, executed=curl_attempts,
-                    grid_exhausted=grid_exhausted, stop_reason=stop_reason or "exhausted")
+                    grid_exhausted=grid_exhausted, stop_reason=stop_reason or "exhausted",
+                    profiles=profiles)
 
 
-def _untried_routes(stop_reason, grid_exhausted) -> tuple[list[str], bool]:
+def _fallback_order_for_profile(profile: Optional[dict]) -> list[str]:
+    profile = profile or {}
+    explicit = [
+        x for x in (profile.get("fallback_when_challenge") or [])
+        if x != "curl_grid_exhaust"
+    ]
+    if explicit:
+        return explicit
+
+    caps = set(profile.get("capabilities_needed") or [])
+    if "needs_mobile_context" in caps:
+        if "needs_real_tls_stack" in caps:
+            return ["playwright_mobile_chrome"]
+        if "needs_js_exec" in caps:
+            return ["playwright_mcp_mobile"]
+    if "needs_real_tls_stack" in caps:
+        return ["playwright_real_chrome"]
+    if "needs_js_exec" in caps:
+        return ["playwright_mcp"]
+    return ["playwright_real_chrome"]
+
+
+def _trace_has_executor(trace: Optional[list[Attempt]], executor_name: str) -> bool:
+    return any(a.phase == "fallback" and a.executor == executor_name for a in (trace or []))
+
+
+def _local_playwright_failure(trace: Optional[list[Attempt]], executors: list[str]) -> Optional[str]:
+    local = {x for x in executors if x.startswith("playwright_") and not x.startswith("playwright_mcp")}
+    for a in reversed(trace or []):
+        if a.phase == "fallback" and a.executor in local and a.error:
+            return a.error
+    return None
+
+
+def _untried_routes(
+    stop_reason,
+    grid_exhausted,
+    *,
+    profile: Optional[dict] = None,
+    trace: Optional[list[Attempt]] = None,
+) -> tuple[list[str], bool]:
     """Failure gate (R6): name the escalation routes the engine itself could not
     perform, so the caller never mistakes give-up for "everything was tried".
 
@@ -637,29 +684,46 @@ def _untried_routes(stop_reason, grid_exhausted) -> tuple[list[str], bool]:
         return routes, False
 
     if rate_limited:
-        routes.append("rate-limited (429) — transient: back off a few seconds then retry; a different TLS family or Playwright MCP often clears it. Do NOT hammer the grid.")
+        routes.append("rate-limited (429) — transient: back off a few seconds, then retry with a different TLS family or the profile-matched browser route. Do NOT hammer the grid.")
     # Budget cut → the curl grid itself was not finished (skip for 429: don't hammer).
     elif stop_reason == "budget" or not grid_exhausted:
         routes.append("generic-grid: NOT exhausted — re-run fetch() with max_attempts=None")
 
-    # A gated page that survived the curl grid → the real browser is the next
-    # escalation, and Playwright MCP must be driven from the AGENT session
-    # (the engine can only spawn local Node Chrome, which Cloudflare-class
-    # challenges often detect). So MCP is, by construction, an untried route here.
-    must_mcp = True
-    routes.append(
-        "playwright_mcp (run from the agent session): browser_navigate → "
-        "browser_network_requests → catch /api,/graphql,*.json internal endpoint → "
-        "re-fetch that API URL with `python3 -m engine`; or browser_snapshot for rendered HTML"
-    )
+    fallback_order = _fallback_order_for_profile(profile)
+    mcp_routes = [x for x in fallback_order if x.startswith("playwright_mcp")]
+    local_routes = [x for x in fallback_order if x.startswith("playwright_") and not x.startswith("playwright_mcp")]
+
+    # MCP is a separate agent-driven tier. Surface it only when the profile
+    # says that Chromium-level JS execution is useful; do not tell Akamai-class
+    # real-TLS profiles that MCP is the final fallback.
+    must_mcp = bool(mcp_routes)
+    if must_mcp:
+        routes.append(
+            "playwright_mcp (run from the agent session): browser_navigate → "
+            "browser_network_requests → catch /api,/graphql,*.json internal endpoint → "
+            "re-fetch that API URL with `python3 -m engine`; or browser_snapshot for rendered HTML"
+        )
+
+    unattempted_local = [x for x in local_routes if not _trace_has_executor(trace, x)]
+    if unattempted_local:
+        routes.append(
+            "local Playwright real-Chrome fallback not attempted yet: "
+            + ", ".join(unattempted_local)
+        )
+    local_error = _local_playwright_failure(trace, local_routes)
+    if local_error:
+        routes.append(f"local Playwright setup/runtime failed: {local_error[:220]}")
+
     routes.append("user_hint retry: fetch(url, user_hint={'impersonate_first': 'safari_ios'|'chrome', 'referer_strategy': 'none'}) and/or device_class='mobile'")
     return routes, must_mcp
 
 
 def _give_up(trace, profile_used, last_resp, last_attempt, best_suspect,
-             *, planned, executed, grid_exhausted, stop_reason) -> FetchResult:
+             *, planned, executed, grid_exhausted, stop_reason, profiles=None) -> FetchResult:
     """Return the most honest failure result, preferring suspect content."""
-    untried, must_mcp = _untried_routes(stop_reason, grid_exhausted)
+    profile = load_profile(profile_used or "unknown_challenge", profiles=profiles)
+    untried, must_mcp = _untried_routes(
+        stop_reason, grid_exhausted, profile=profile, trace=trace)
     if best_suspect is not None:
         s_resp, s_att = best_suspect
         content = getattr(s_resp, "text", "") if s_resp is not None else ""

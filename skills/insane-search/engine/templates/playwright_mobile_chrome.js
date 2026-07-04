@@ -8,6 +8,10 @@
  * Device name must match playwright `devices[...]` keys (Pixel 7, iPhone 13 Pro,
  * iPad Pro 11, etc.). When in doubt, omit `device` — default is iPhone 13 Pro.
  *
+ * Dependencies (install once in this directory):
+ *   npm install
+ *   npx patchright install chrome    # system Chrome channel
+ *
  * NO-SITE-NAME RULE: same as playwright_real_chrome.js — no hostname branches.
  */
 

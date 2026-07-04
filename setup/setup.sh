@@ -2,8 +2,10 @@
 # First-run setup for insane-search. Idempotent, non-blocking.
 #   setup.sh            -> env checks + update-notifier hook (once). SILENT: no star prompt.
 #                          Used by skill / auto-trigger Step 0 (output is discarded).
-#   setup.sh ask        -> same first-run setup, then — iff no star decision is on record —
-#                          atomically records an "asked" marker AND prints "STAR_ASK <lang>".
+#   setup.sh ask        -> same first-run setup. Star prompts are silent by default
+#                          for classroom/team installs. If INSANE_SEARCH_STAR_PROMPT=1
+#                          and no star decision is on record, atomically records an
+#                          "asked" marker AND prints "STAR_ASK <lang>".
 #                          Recording the marker HERE (not via a model follow-up) guarantees
 #                          the question is shown at most once per plugin, even if the caller
 #                          never reports the answer back. <lang> is a best-effort fallback
@@ -130,7 +132,7 @@ fi
 # Only the command flow passes "ask". Bare / silent skill invocations never reach here,
 # so they neither prompt nor record — the prompt is shown at most once, by a command,
 # and the "asked" marker is written by bash regardless of any model follow-up.
-if [ "${1:-}" = "ask" ] && [ ! -f "$STAR_MARKER" ]; then
+if [ "${1:-}" = "ask" ] && [ ! -f "$STAR_MARKER" ] && [ "${INSANE_SEARCH_STAR_PROMPT:-0}" = "1" ]; then
   write_star "asked"
   echo "STAR_ASK $(detect_lang)"
 fi

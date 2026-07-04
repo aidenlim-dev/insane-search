@@ -1,0 +1,30 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "insane-search-marketplace",
+  "description": "Marketplace for installing the insane-search Claude Code plugin directly from this repository.",
+  "owner": {
+    "name": "Aiden Lim"
+  },
+  "plugins": [
+    {
+      "name": "insane-search",
+      "source": "./",
+      "description": "Adaptive public-page reader for blocked sites using public APIs, curl_cffi TLS impersonation, Jina, yt-dlp, and Playwright fallbacks.",
+      "version": "0.9.1",
+      "author": {
+        "name": "fivetaku"
+      },
+      "homepage": "https://github.com/aidenlim-dev/insane-search",
+      "repository": "https://github.com/aidenlim-dev/insane-search",
+      "license": "MIT",
+      "category": "development",
+      "tags": [
+        "web-access",
+        "search",
+        "waf",
+        "curl-cffi",
+        "playwright"
+      ]
+    }
+  ]
+}

@@ -25,13 +25,38 @@ A resilient public-page reader for Claude Code. No API keys, no proxy setup.
 
 ## ⚡ Install
 
+For this course / direct GitHub install:
+
+```bash
+/plugin marketplace add aidenlim-dev/insane-search
+/plugin install insane-search@insane-search-marketplace
+/reload-plugins
+```
+
+Verify the install from a terminal:
+
+```bash
+git clone https://github.com/aidenlim-dev/insane-search.git
+cd insane-search
+bash setup/doctor.sh
+```
+
+Optional full browser coverage:
+
+```bash
+claude mcp add playwright -- npx -y @playwright/mcp@latest
+cd skills/insane-search/engine/templates && npm install && npx patchright install chrome
+```
+
+Marketplace install from `gptaku-plugins`:
+
 ```bash
 /plugin marketplace add https://github.com/fivetaku/gptaku_plugins.git
 /plugin install insane-search@gptaku-plugins
 /reload-plugins
 ```
 
-No commands to learn. Ask Claude Code normally — insane-search kicks in when a fetch gets blocked.
+No commands to learn after install. Ask Claude Code normally — insane-search kicks in when a fetch gets blocked.
 
 ## 💬 Try it
 
@@ -52,7 +77,7 @@ Just ask normally — insane-search kicks in when a fetch gets blocked:
 - **It escalates, never pre-judges** — public API readers → syndication gateways → TLS impersonation → a real headless browser, trying each route until one works.
 - **It looks human** — builds a full browser identity (real TLS fingerprint, cookie warming, referer chain), not just a swapped User-Agent.
 - **It finds hidden APIs** — watches the real browser's network traffic and reuses the site's own internal JSON.
-- **Zero setup** — auto-installs what it needs (`curl_cffi`, `yt-dlp`, …) on first use. No API keys, no signup.
+- **Zero system-Python setup** — first use creates an isolated plugin venv for `curl_cffi`, `yt-dlp`, and parser dependencies. No API keys, no signup.
 
 ## 🆚 Default Claude Code vs `+ insane-search`
 

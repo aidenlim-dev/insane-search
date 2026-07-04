@@ -53,13 +53,44 @@ def _node_available() -> bool:
     return shutil.which("node") is not None
 
 
-def _chrome_channel_available() -> bool:
-    """Heuristic: try `node -e` to import playwright. Fallback to True, let script fail loudly."""
+def _local_playwright_dependency_error() -> Optional[str]:
+    """Return an actionable setup error when local Playwright cannot start.
+
+    The templates load local dependencies from `engine/templates/package.json`
+    because subprocesses run with that directory as cwd. Checking the module
+    graph before launching Chrome keeps missing `npm install` failures cheap
+    and makes the two Playwright tiers explicit in the trace.
+    """
     if not _node_available():
-        return False
-    if shutil.which("npx") is None:
-        return False
-    return True
+        return "node not available for local Playwright template"
+    probe = """
+const mods = ['patchright', 'playwright-extra', 'playwright'];
+for (const m of mods) {
+  try {
+    require.resolve(m);
+    process.exit(0);
+  } catch (_e) {}
+}
+process.stderr.write('missing local Playwright dependency: install engine/templates/package.json');
+process.exit(1);
+"""
+    try:
+        proc = subprocess.run(
+            ["node", "-e", probe],
+            cwd=TEMPLATES_DIR,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except subprocess.TimeoutExpired:
+        return "local Playwright dependency probe timed out"
+    except Exception as e:
+        return f"local Playwright dependency probe failed: {type(e).__name__}:{e}"
+    if proc.returncode == 0:
+        return None
+    hint = "run `cd skills/insane-search/engine/templates && npm install && npx patchright install chrome`"
+    detail = (proc.stderr or proc.stdout or "missing local Playwright dependency").strip()
+    return f"{detail}; {hint}"
 
 
 def _pick_executor(capabilities: list[str], device_class: str) -> str:
@@ -162,8 +193,9 @@ def run_playwright_fallback(
         att.elapsed_s = round(time.time() - t0, 3)
         return att, ""
 
-    if not _chrome_channel_available():
-        att.error = "node/npx not available for local Playwright template"
+    dep_error = _local_playwright_dependency_error()
+    if dep_error:
+        att.error = dep_error[:300]
         att.verdict = Verdict.UNKNOWN.value
         att.elapsed_s = round(time.time() - t0, 3)
         return att, ""
