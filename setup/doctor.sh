@@ -31,6 +31,18 @@ else
   bad ".claude-plugin/marketplace.json is missing"
 fi
 
+if [ -f "$ROOT/requirements.lock" ]; then
+  ok "Python dependency lockfile present"
+else
+  bad "requirements.lock is missing"
+fi
+
+if [ -f "$ROOT/skills/insane-search/engine/templates/package-lock.json" ]; then
+  ok "Node dependency lockfile present"
+else
+  warn "Node dependency lockfile missing; optional browser setup may drift"
+fi
+
 if "$RUN_ENGINE" "https://example.com/" --selector h1 --no-playwright --max-attempts 1 --json >/tmp/insane-search-doctor.json 2>/tmp/insane-search-doctor.err; then
   ok "engine smoke test passed"
 else
@@ -47,13 +59,13 @@ fi
 if [ -d "$ROOT/skills/insane-search/engine/templates/node_modules" ]; then
   ok "local Playwright template dependencies installed"
 else
-  warn "optional local Playwright deps missing: cd skills/insane-search/engine/templates && npm install && npx patchright install chrome"
+  warn "optional browser fallback not fully installed: run 'bash setup/browser.sh'"
 fi
 
 if command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null | grep -qi playwright; then
   ok "Playwright MCP appears configured"
 else
-  warn "optional Playwright MCP not configured: claude mcp add playwright -- npx -y @playwright/mcp@latest"
+  warn "optional Playwright MCP not configured: run 'bash setup/browser.sh'"
 fi
 
 exit "$fail"

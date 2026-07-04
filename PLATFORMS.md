@@ -70,22 +70,19 @@ The skill is organized as a set of reference files (`skills/insane-search/refere
 
 **Required:** Claude Code only.
 
-**Auto-installed when needed** (the skill installs these transparently on first use):
+**Installed in an isolated plugin venv on first use** (`setup/run-engine.sh`; system Python is not modified):
 
 ```bash
-pip install curl_cffi    # TLS impersonation for WAF-blocked sites (>= 0.15.0)
-pip install feedparser   # RSS/Atom parsing
-pip install yt-dlp       # 1,858 media sites
+bash setup/run-engine.sh "https://example.com/" --selector h1 --no-playwright --json
 ```
 
 **Optional, improves coverage:**
 
 ```bash
-brew install gh                      # GitHub (faster than REST API)
-claude mcp add playwright -- npx @playwright/mcp@latest   # JS-rendered sites
+bash setup/browser.sh   # local Chrome/Patchright + Playwright MCP
 ```
 
-If a dependency is missing, the skill doesn't skip the method — it installs the dependency and tries.
+If a dependency is missing, the wrapper installs the locked runtime dependency set and then tries the route.
 
 ## What insane-search is not
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.2 — 2026-07-04
+
+Course-install hardening and release hygiene.
+
+- **Direct GitHub marketplace**: added `.claude-plugin/marketplace.json` so students can install directly with `/plugin marketplace add aidenlim-dev/insane-search` and `/plugin install insane-search@insane-search-marketplace`.
+- **Isolated Python runtime**: `setup/run-engine.sh` now creates a plugin-owned venv and installs from `requirements.lock`, avoiding macOS/Homebrew global-pip failures.
+- **Browser setup path**: added `setup/browser.sh` to install local Patchright/Playwright Chrome dependencies and register Playwright MCP when available.
+- **Student support scripts/docs**: added `setup/doctor.sh`, `setup/live-check.sh`, and `COURSE_INSTALL.ko.md`.
+- **CI and lockfiles**: added GitHub Actions validation, `requirements.lock`, and `engine/templates/package-lock.json`.
+- **Playwright routing fix**: failure diagnostics now respect MCP vs local real-Chrome tiers instead of treating MCP as the universal final fallback.
+
 ## 0.9.1 — 2026-07-02
 
 Activate the Patchright fallback and align the self-learning host key.

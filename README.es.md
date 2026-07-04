@@ -52,7 +52,7 @@ Solo pídelo con normalidad: insane-search se activa cuando algo se bloquea:
 - **Escala, nunca prejuzga** —lectores de API públicas → pasarelas de sindicación → suplantación TLS → un navegador headless real, probando cada ruta hasta que una funciona.
 - **Parece humano** —construye una identidad de navegador completa (huella TLS real, calentamiento de cookies, cadena de referer), no solo un User-Agent cambiado.
 - **Encuentra APIs ocultas** —observa el tráfico de red del navegador real y reutiliza el JSON interno del propio sitio.
-- **Cero configuración** —instala lo que necesita (`curl_cffi`, `yt-dlp`, …) en el primer uso. Sin claves de API, sin registro.
+- **Sin tocar el Python del sistema** —en el primer uso crea un venv propio del plugin para `curl_cffi`, `yt-dlp` y dependencias de parsing. Sin claves de API, sin registro.
 
 ## 🆚 Claude Code por defecto vs `+ insane-search`
 

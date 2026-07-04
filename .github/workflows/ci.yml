@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate plugin marketplace
+        run: claude plugin validate .
+
+      - name: Install locked Python dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -U pip
+          .venv/bin/python -m pip install -r requirements.lock
+
+      - name: Validate Node lockfile
+        run: npm ci --prefix skills/insane-search/engine/templates --ignore-scripts
+
+      - name: Python compile
+        run: .venv/bin/python -m compileall -q skills/insane-search/engine
+
+      - name: Unit and regression tests
+        run: |
+          .venv/bin/python skills/insane-search/engine/tests/test_u1.py
+          .venv/bin/python skills/insane-search/engine/tests/test_u4.py
+          PYTHONPATH="$PWD/skills/insane-search" .venv/bin/python skills/insane-search/engine/tests/test_u5.py
+          .venv/bin/python skills/insane-search/engine/tests/test_u7.py
+          .venv/bin/python skills/insane-search/engine/tests/test_u8.py
+          .venv/bin/python skills/insane-search/engine/tests/test_u9.py
+
+      - name: Bias check
+        run: .venv/bin/python skills/insane-search/engine/bias_check.py
+
+      - name: Engine smoke
+        run: |
+          INSANE_SEARCH_VENV="$PWD/.run-engine-venv" \
+            bash setup/run-engine.sh https://example.com/ --selector h1 --no-playwright --max-attempts 1 --json
+
+      - name: Online smoke tests
+        run: .venv/bin/python skills/insane-search/engine/tests/test_smoke.py

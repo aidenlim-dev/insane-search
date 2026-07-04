@@ -44,9 +44,10 @@ bash setup/doctor.sh
 Optional full browser coverage:
 
 ```bash
-claude mcp add playwright -- npx -y @playwright/mcp@latest
-cd skills/insane-search/engine/templates && npm install && npx patchright install chrome
+bash setup/browser.sh
 ```
+
+For a short classroom handout, use [COURSE_INSTALL.ko.md](COURSE_INSTALL.ko.md).
 
 Marketplace install from `gptaku-plugins`:
 

@@ -1,0 +1,71 @@
+# 강의 수강생 설치 가이드
+
+## 1. 설치
+
+Claude Code 안에서 실행합니다.
+
+```bash
+/plugin marketplace add aidenlim-dev/insane-search
+/plugin install insane-search@insane-search-marketplace
+/reload-plugins
+```
+
+## 2. 간단 테스트
+
+Claude Code에게 이렇게 물어봅니다.
+
+```text
+https://example.com/ 읽어줘
+```
+
+막힌 사이트를 테스트할 때는 공개 페이지 URL만 사용하세요. 로그인, 페이월, 비공개 데이터는 대상이 아닙니다.
+
+## 3. 상태 점검
+
+문제가 있으면 터미널에서 아래를 실행합니다.
+
+```bash
+git clone https://github.com/aidenlim-dev/insane-search.git
+cd insane-search
+bash setup/doctor.sh
+```
+
+`warn`은 선택 기능 경고입니다. 기본 fetch가 되는지 보려면 `engine smoke test passed`를 확인하세요.
+
+공개 라우트 라이브 체크:
+
+```bash
+bash setup/live-check.sh
+```
+
+조금 더 넓게 확인하고 싶을 때:
+
+```bash
+INSANE_SEARCH_LIVE_EXTENDED=1 bash setup/live-check.sh
+```
+
+## 4. 브라우저 폴백까지 켜기
+
+Cloudflare급 JS 렌더링, Akamai/DataDome류 강한 WAF 대응력을 높이고 싶을 때만 실행합니다.
+
+```bash
+bash setup/browser.sh
+```
+
+끝난 뒤 Claude Code를 재시작하거나 `/reload-plugins`를 실행하세요.
+
+## 5. 자주 나는 문제
+
+- `Claude Code CLI not found`: Claude Code를 먼저 설치하세요.
+- `python3 is required`: Python 3가 필요합니다.
+- `Node.js not found`: 기본 사용은 가능하지만 local Chrome fallback은 동작하지 않습니다. `setup/browser.sh`를 쓰려면 Node를 설치하세요.
+- `Playwright MCP not configured`: 기본 사용은 가능하지만 JS 렌더링 정찰이 제한됩니다. `setup/browser.sh`를 실행하세요.
+- `auth_required`, `paywall`, `not_found`: 플러그인이 우회하지 않는 정상 중단입니다.
+
+## 6. 설치 명령 다시
+
+```bash
+/plugin marketplace add aidenlim-dev/insane-search
+/plugin install insane-search@insane-search-marketplace
+/reload-plugins
+```

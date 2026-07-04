@@ -7,8 +7,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENGINE_ROOT="$ROOT/skills/insane-search"
+LOCK_FILE="$ROOT/requirements.lock"
 VENV_DIR="${INSANE_SEARCH_VENV:-${XDG_CACHE_HOME:-$HOME/.cache}/insane-search/venv}"
-STAMP="$VENV_DIR/.insane-search-deps-v2"
+STAMP="$VENV_DIR/.insane-search-deps-v3"
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "insane-search: python3 is required but was not found" >&2
@@ -27,10 +28,7 @@ if [ ! -f "$STAMP" ]; then
     exit 1
   fi
   if ! "$VENV_DIR/bin/python" -m pip install -U \
-      "curl_cffi>=0.15.0" \
-      beautifulsoup4 \
-      pyyaml \
-      yt-dlp \
+      -r "$LOCK_FILE" \
       >>"$LOG" 2>&1; then
     cat "$LOG" >&2
     exit 1

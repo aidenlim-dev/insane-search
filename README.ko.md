@@ -44,9 +44,10 @@ bash setup/doctor.sh
 브라우저 폴백까지 완전히 쓰고 싶을 때:
 
 ```bash
-claude mcp add playwright -- npx -y @playwright/mcp@latest
-cd skills/insane-search/engine/templates && npm install && npx patchright install chrome
+bash setup/browser.sh
 ```
+
+수강생에게 짧게 배포할 문서는 [COURSE_INSTALL.ko.md](COURSE_INSTALL.ko.md)를 쓰면 됩니다.
 
 기존 `gptaku-plugins` 마켓플레이스 설치:
 
