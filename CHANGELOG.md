@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.5 — 2026-07-04
+
+Windows wrapper follow-up.
+
+- **Python selection**: `setup/run-engine.ps1` now prefers the active `python` on `PATH` before the Windows `py -3` launcher, so CI and user-managed Python environments are respected.
+- **UTF-8 stdout**: the PowerShell engine wrapper forces Python UTF-8 mode while running the engine, avoiding Windows `cp1252` crashes when metadata contains symbols such as `→`.
+
 ## 0.9.4 — 2026-07-04
 
 Windows-native setup and verification.

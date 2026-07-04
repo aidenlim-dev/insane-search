@@ -15,9 +15,9 @@ $LockFile = Join-Path $Root "requirements.lock"
 
 function Get-PythonExe {
   $candidates = @(
-    @{ Command = "py"; Args = @("-3") },
     @{ Command = "python"; Args = @() },
-    @{ Command = "python3"; Args = @() }
+    @{ Command = "python3"; Args = @() },
+    @{ Command = "py"; Args = @("-3") }
   )
   foreach ($candidate in $candidates) {
     if (-not (Get-Command $candidate.Command -ErrorAction SilentlyContinue)) {
@@ -70,6 +70,11 @@ if (-not (Test-Path $VenvPython)) {
   }
 }
 
+$OldPythonUtf8 = $env:PYTHONUTF8
+$OldPythonIoEncoding = $env:PYTHONIOENCODING
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+
 if (-not (Test-Path $Stamp)) {
   $Log = Join-Path $VenvDir "install.log"
   & $VenvPython -m pip install -U pip *> $Log
@@ -99,5 +104,7 @@ try {
 } finally {
   Pop-Location
   $env:PYTHONPATH = $OldPythonPath
+  $env:PYTHONUTF8 = $OldPythonUtf8
+  $env:PYTHONIOENCODING = $OldPythonIoEncoding
 }
 exit $Code
