@@ -2,7 +2,11 @@
 # Optional full-browser setup for stronger JS/WAF fallbacks.
 # Windows-native companion to setup/browser.sh.
 [CmdletBinding()]
-param()
+param(
+  # Install Node.js LTS via winget when missing. Requires explicit user consent:
+  # agents must ask before passing this flag.
+  [switch] $InstallNode
+)
 
 # "Continue", not "Stop": Windows PowerShell 5.1 promotes native stderr output
 # to terminating errors under "Stop". Native calls below check $LASTEXITCODE.
@@ -16,7 +20,22 @@ function Warn($Message) { Write-Host "warn $Message" }
 function Bad($Message) { Write-Host "bad $Message"; exit 1 }
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-  Bad "Node.js is required. Install Node 18+ first."
+  if (-not $InstallNode) {
+    Bad "Node.js is required. Install Node 18+ first, or re-run with -InstallNode to install it via winget (ask the user first)."
+  }
+  if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+    Bad "winget is not available. Install Node 18+ manually from https://nodejs.org/ and re-run."
+  }
+  Ok "Installing Node.js LTS via winget..."
+  & winget install --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+  if ($LASTEXITCODE -ne 0) {
+    Bad "winget install failed. Install Node 18+ manually from https://nodejs.org/ and re-run."
+  }
+  # winget only updates PATH for new shells; pick the change up in this session.
+  $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
+  if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Bad "Node.js was installed but is not visible in this session. Open a new terminal and re-run setup/browser.ps1."
+  }
 }
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
   Bad "npm is required. Install Node/npm first."

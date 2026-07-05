@@ -50,22 +50,49 @@ else
   sed -n '1,20p' /tmp/aioffice-searchpro-doctor.err >&2
 fi
 
+has_node=0
 if command -v node >/dev/null 2>&1; then
+  has_node=1
   ok "Node.js found: $(node --version)"
 else
   warn "Node.js not found; local real-Chrome Playwright fallback will be unavailable"
 fi
 
+has_browser_deps=0
 if [ -d "$ROOT/skills/aioffice-searchpro/engine/templates/node_modules" ]; then
+  has_browser_deps=1
   ok "local Playwright template dependencies installed"
 else
   warn "optional browser fallback not fully installed: run 'bash setup/browser.sh'"
 fi
 
+has_mcp=0
 if command -v claude >/dev/null 2>&1 && claude mcp list 2>/dev/null | grep -qi playwright; then
+  has_mcp=1
   ok "Playwright MCP appears configured"
 else
   warn "optional Playwright MCP not configured: run 'bash setup/browser.sh'"
+fi
+
+echo ""
+echo "=== doctor summary ==="
+if [ "$fail" -ne 0 ]; then
+  echo "CORE: NOT READY - fix the 'bad' items above, then re-run doctor."
+else
+  echo "CORE: ready - blocked-page reading works now; no further setup is required."
+fi
+if [ "$has_node" -eq 1 ] && [ "$has_browser_deps" -eq 1 ] && [ "$has_mcp" -eq 1 ]; then
+  echo "OPTIONAL browser fallback: fully installed."
+else
+  echo "OPTIONAL browser fallback: not fully installed. Only needed for heavy JS/WAF sites (Cloudflare/Akamai class); everything else already works."
+  echo "  To enable later:"
+  if [ "$has_node" -eq 0 ]; then
+    echo "    1) Install Node.js 18+ (macOS: brew install node)"
+    echo "    2) bash setup/browser.sh   (or let the script install Node: bash setup/browser.sh --install-node)"
+  else
+    echo "    bash setup/browser.sh"
+  fi
+  echo "  AI agents: relay this optional gap to the user and ask before installing Node.js or MCP servers - never install system software silently."
 fi
 
 exit "$fail"

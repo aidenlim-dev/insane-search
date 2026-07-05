@@ -44,6 +44,18 @@ claude plugin install aioffice-searchpro@aioffice-searchpro-marketplace
 
 然后重启 Claude Code 或运行 `/reload-plugins` 加载插件。
 
+验证时**无需重新克隆仓库**，直接在已安装的副本中运行 doctor：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\plugins\marketplaces\aioffice-searchpro-marketplace\setup\doctor.ps1"
+```
+
+```bash
+bash ~/.claude/plugins/marketplaces/aioffice-searchpro-marketplace/setup/doctor.sh
+```
+
+doctor 摘要中的 OPTIONAL 项（Node.js、浏览器 fallback）不是必需的——向用户报告，仅在用户同意后安装（`setup/browser.ps1 -InstallNode`，macOS：`--install-node`）。
+
 可选：启用完整浏览器 fallback：
 
 ```bash

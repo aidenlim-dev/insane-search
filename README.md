@@ -44,7 +44,19 @@ claude plugin install aioffice-searchpro@aioffice-searchpro-marketplace
 
 Then restart Claude Code or run `/reload-plugins` to load the plugin.
 
-Verify the install from a terminal:
+To verify, run doctor straight from the installed copy — **no extra clone needed**:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\plugins\marketplaces\aioffice-searchpro-marketplace\setup\doctor.ps1"
+```
+
+```bash
+bash ~/.claude/plugins/marketplaces/aioffice-searchpro-marketplace/setup/doctor.sh
+```
+
+Items under OPTIONAL in the doctor summary (Node.js, browser fallback) are not required — report them to the user and only install after they agree (`setup/browser.ps1 -InstallNode`, macOS: `--install-node`).
+
+Verify the install from a terminal (already installed via the marketplace? run doctor from `~/.claude/plugins/marketplaces/aioffice-searchpro-marketplace` instead — no clone needed):
 
 ```bash
 git clone https://github.com/aidenlim-dev/AIOFFICE-SearchPro.git

@@ -9,7 +9,21 @@ ok() { printf 'ok  %s\n' "$1"; }
 warn() { printf 'warn %s\n' "$1"; }
 die() { printf 'bad %s\n' "$1" >&2; exit 1; }
 
-command -v node >/dev/null 2>&1 || die "Node.js is required. Install Node 18+ first."
+# --install-node: install Node.js via Homebrew when missing. Requires explicit
+# user consent: agents must ask before passing this flag.
+INSTALL_NODE=0
+for arg in "$@"; do
+  [ "$arg" = "--install-node" ] && INSTALL_NODE=1
+done
+
+if ! command -v node >/dev/null 2>&1; then
+  if [ "$INSTALL_NODE" -eq 1 ] && command -v brew >/dev/null 2>&1; then
+    ok "Installing Node.js via Homebrew..."
+    brew install node || die "brew install node failed. Install Node 18+ manually from https://nodejs.org/ and re-run."
+  else
+    die "Node.js is required. Install Node 18+ first (macOS: re-run with --install-node to install via Homebrew after asking the user)."
+  fi
+fi
 command -v npm >/dev/null 2>&1 || die "npm is required. Install Node/npm first."
 
 ok "Node.js found: $(node --version)"

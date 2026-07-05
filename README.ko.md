@@ -44,7 +44,19 @@ claude plugin install aioffice-searchpro@aioffice-searchpro-marketplace
 
 설치 후 Claude Code를 재시작하거나 `/reload-plugins`를 실행하면 플러그인이 로드됩니다.
 
-터미널에서 설치 상태 확인:
+설치 확인은 저장소를 **새로 클론하지 말고** 설치된 복사본에서 doctor를 바로 실행하세요:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\plugins\marketplaces\aioffice-searchpro-marketplace\setup\doctor.ps1"
+```
+
+```bash
+bash ~/.claude/plugins/marketplaces/aioffice-searchpro-marketplace/setup/doctor.sh
+```
+
+doctor 요약의 OPTIONAL 항목(Node.js·브라우저 폴백)은 필수가 아닙니다 — 사용자에게 보고만 하고, 동의한 경우에만 설치하세요(`setup/browser.ps1 -InstallNode`, macOS: `--install-node`).
+
+터미널에서 설치 상태 확인 (이미 마켓플레이스로 설치했다면 클론 없이 `~/.claude/plugins/marketplaces/aioffice-searchpro-marketplace`의 doctor를 바로 실행):
 
 ```bash
 git clone https://github.com/aidenlim-dev/AIOFFICE-SearchPro.git

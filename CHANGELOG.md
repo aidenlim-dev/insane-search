@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 — 2026-07-05
+
+Post-install clarity: no stray clones, and a doctor summary that tells users (and agents) exactly what's optional.
+
+- **Doctor summary block**: `doctor.ps1`/`doctor.sh` now end with `=== doctor summary ===` separating CORE readiness from the OPTIONAL browser fallback, including exact enable steps and an explicit note that agents must ask before installing Node.js or MCP servers.
+- **No-clone verification**: docs now point doctor runs at the installed marketplace copy (`~/.claude/plugins/marketplaces/aioffice-searchpro-marketplace`), so agents stop cloning a second copy of the repo into the user's home directory just to verify.
+- **Consent-gated Node install**: `setup/browser.ps1 -InstallNode` (winget) and `setup/browser.sh --install-node` (Homebrew) let the browser-fallback setup install Node.js in one step — gated behind an explicit flag that agents pass only after user consent.
+
 ## 1.0.1 — 2026-07-05
 
 Agent-driven install hardening: "throw the repo link at Claude Code and say install" now works first-try on stock Windows.

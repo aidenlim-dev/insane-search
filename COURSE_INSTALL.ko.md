@@ -31,7 +31,19 @@ https://example.com/ 읽어줘
 
 ## 3. 상태 점검
 
-문제가 있으면 터미널에서 아래를 실행합니다.
+이미 마켓플레이스로 설치했다면 **클론 없이** 설치된 복사본에서 바로 실행합니다.
+
+```bash
+bash ~/.claude/plugins/marketplaces/aioffice-searchpro-marketplace/setup/doctor.sh
+```
+
+Windows PowerShell:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\plugins\marketplaces\aioffice-searchpro-marketplace\setup\doctor.ps1"
+```
+
+아직 설치 전이거나 저장소에서 직접 점검하려면:
 
 ```bash
 git clone https://github.com/aidenlim-dev/AIOFFICE-SearchPro.git
@@ -46,6 +58,8 @@ git clone https://github.com/aidenlim-dev/AIOFFICE-SearchPro.git
 cd AIOFFICE-SearchPro
 powershell -NoProfile -ExecutionPolicy Bypass -File .\setup\doctor.ps1
 ```
+
+doctor 끝의 `=== doctor summary ===`가 결과를 요약해 줍니다: `CORE: ready`면 바로 사용 가능하고, OPTIONAL(브라우저 폴백)은 Cloudflare급 사이트에서만 필요한 선택 사항입니다. AI 에이전트에게 시킨 경우, OPTIONAL 항목은 보고만 받고 원할 때만 설치를 진행하게 하세요.
 
 `warn`은 선택 기능 경고입니다. 기본 fetch가 되는지 보려면 `engine smoke test passed`를 확인하세요.
 
