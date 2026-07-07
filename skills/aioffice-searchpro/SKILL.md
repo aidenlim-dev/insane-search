@@ -1,10 +1,15 @@
 ---
 name: aioffice-searchpro
 description: >
-  Adaptive access for blocked websites — tries every method until one works.
-  Use when WebFetch returns 402/403/blocked, or when accessing X/Twitter, Reddit,
-  YouTube, GitHub, Mastodon, Medium, Substack, Stack Overflow, Threads, Naver,
-  Coupang, LinkedIn, or any platform with WAF/bot protection. Leverages yt-dlp
+  Adaptive access for blocked or bot-protected websites — tries every method
+  until one works. LOAD THIS SKILL FIRST, before opening the page in a browser
+  (claude-in-chrome/Playwright) or falling back to WebFetch, whenever a URL from
+  a known-protected platform appears — X/Twitter, Reddit, YouTube, GitHub,
+  Mastodon, Medium, Substack, Stack Overflow, Threads, Naver, Coupang, LinkedIn,
+  Danggeun, and the sites listed below. Do NOT jump straight to a browser just
+  because a site "has bot protection" — this skill is the designated tool for
+  exactly that case and is faster and cheaper. Also use when WebFetch returns
+  402/403/blocked, or when accessing any platform with WAF/bot protection. Leverages yt-dlp
   (1,858 media sites), Jina Reader, public APIs (HN, Bluesky, arXiv), and a
   generic WAF-profile-driven fetch chain (curl_cffi TLS impersonation, mobile
   URL transforms, Playwright real-Chrome) with auto dependency install.
